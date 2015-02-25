@@ -1,6 +1,3 @@
-var formatDate = d3.time.format("%a"),
-    formatDay = function(d) { return formatDate(new Date(2007, 0, d)); };
-
 var width = 960,
     height = 500,
     outerRadius = height / 2 - 10,
@@ -42,9 +39,6 @@ var width = 960,
   scaleSecsMins = d3.scale.linear().domain([0, 59 + 59 / 60]).range([0, 2 * pi]);
 
   scaleHours = d3.scale.linear().domain([0, 11 + 59 / 60]).range([0, 2 * pi]);
-
-
-
 
   render = function(data) {
     var hourArc, minuteArc, secondArc;
@@ -89,12 +83,24 @@ var width = 960,
     return render(data);
   }, 1000);
 
+/* 
+    FROM HERE
+    STACKED RADIAL  
+*/
+
+var formatDate = d3.time.format("%H"),
+    formatDay = function(d) { return formatDate(new Date(2007, 0, 0, d)); };
 
 var angle = d3.time.scale()
     .range([0, 2 * Math.PI]);
 
 var radius = d3.scale.linear()
     .range([innerRadius, outerRadius]);
+
+var colors = ["#0099CC", "#B22222" ];
+
+var color = d3.scale.threshold()
+      .range(colors);
 
 var z = d3.scale.category20c();
 
@@ -108,12 +114,12 @@ var nest = d3.nest()
     .key(function(d) { return d.key; });
 
 var line = d3.svg.line.radial()
-    .interpolate("cardinal-closed")
+    .interpolate("basis-open")
     .angle(function(d) { return angle(d.time); })
     .radius(function(d) { return radius(d.y0 + d.y); });
 
 var area = d3.svg.area.radial()
-    .interpolate("cardinal-closed")
+    .interpolate("basis-open")
     .angle(function(d) { return angle(d.time); })
     .innerRadius(function(d) { return radius(d.y0); })
     .outerRadius(function(d) { return radius(d.y0 + d.y); });
@@ -124,9 +130,9 @@ var svg = d3.select("#graph").append("svg")
   .append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-d3.csv("data/data.csv", type, function(error, data) {
+d3.csv("data/day-data-afternoon.csv", type, function(error, data) {
   var layers = stack(nest.entries(data));
-
+    
   // Extend the domain slightly to match the range of [0, 2π].
   angle.domain([0, d3.max(data, function(d) { return d.time + 1; })]);
   radius.domain([0, d3.max(data, function(d) { return d.y0 + d.y; })]);
@@ -136,7 +142,8 @@ d3.csv("data/data.csv", type, function(error, data) {
     .enter().append("path")
       .attr("class", "layer")
       .attr("d", function(d) { return area(d.values); })
-      .style("fill", function(d, i) { return z(i); });
+      .style("fill", function(d, i) { return color(i); });
+      
 
   svg.selectAll(".axis")
       .data(d3.range(angle.domain()[1]))
@@ -150,7 +157,7 @@ d3.csv("data/data.csv", type, function(error, data) {
       .attr("y", -innerRadius + 6)
       .attr("dy", ".71em")
       .attr("text-anchor", "middle")
-      .text(function(d) { return formatDay(d); });
+      .text(function(d) { return formatDay(d + 12); }); // text label on axis
 });
 
 
