@@ -31,9 +31,8 @@ $(document).ready(function() {
     ];
   };
 
-  width = 400;
-
-  height = 200;
+width = 960,
+    height = 500,
 
   offSetX = 150;
 
@@ -45,7 +44,7 @@ $(document).ready(function() {
 
   scaleHours = d3.scale.linear().domain([0, 11 + 59 / 60]).range([0, 2 * pi]);
 
-  vis = d3.select("#clock-canvas").append("svg:svg").attr("width", width).attr("height", height);
+  vis = d3.select("#graph").append("svg:svg").attr("width", width).attr("height", height);
 
   clockGroup = vis.append("svg:g").attr("transform", "translate(" + offSetX + "," + offSetY + ")");
 
