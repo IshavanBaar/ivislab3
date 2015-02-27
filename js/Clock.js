@@ -31,7 +31,7 @@ $(document).ready(function() {
     ];
   };
 
-width = 960,
+    width = 960,
     height = 500,
 
   offSetX = 150;
@@ -44,7 +44,7 @@ width = 960,
 
   scaleHours = d3.scale.linear().domain([0, 11 + 59 / 60]).range([0, 2 * pi]);
 
-  vis = d3.select("#graph").append("svg:svg").attr("width", width).attr("height", height);
+  vis = d3.select("#graph").append("svg:svg").attr("width", width/2).attr("height", height/2);
 
   clockGroup = vis.append("svg:g").attr("transform", "translate(" + offSetX + "," + offSetY + ")");
 

@@ -1,16 +1,27 @@
-body {
-  font: 10px sans-serif;
+#hour-label {
+  font: 10px sans-serif; 
+  font-family: Arial;
 }
 
+/*for now axes horizontal dashes disabled
 .axis line {
-  stroke: #000;
-}
+  stroke: #000; 
+}*/
 
 .axis path {
   fill: none;
   stroke: #000;
+  display: none; /*for now no axes*/
 }
 
-.axis + .axis g text {
-  display: none;
+.axis g text {
+  display: none; /*for now no text on axes*/
+}
+
+path {
+  fill-rule: evenodd;
+  fill: #aaa;
+  fill-opacity: .7;
+  stroke: #666;
+  stroke-width: 1.5px;
 }

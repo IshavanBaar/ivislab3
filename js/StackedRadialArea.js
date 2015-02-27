@@ -1,87 +1,74 @@
+// WIDTH, HEIGHT, STACKED RADIAL FOR CLOCK AND STACKED RADIAL
 var width = 960,
     height = 500,
-    outerRadius = height / 2 - 10,
-    innerRadius = 120;
+    outerRadius = height / 2 - 10, //Adjust for upper height of stacked graph
+    innerRadius = 140; //Adjust for height lower height of stacked graph
 
-  var clockGroup, fields, formatHour, formatMinute, formatSecond, height, pi, render, scaleHours, scaleSecsMins, vis, width;
+/*
+    FROM HERE
+    ARC-TWEEN-CLOCK
+*/
 
-  formatSecond = d3.time.format("%S");
+var fields = [
+  {name: "hours", value: 0, size: 12, innerRadius: 80, outerRadius: 100},
+  {name: "minutes", value: 0, size: 60, innerRadius: 50, outerRadius: 70},
+  {name: "seconds", value: 0, size: 60, innerRadius: 20, outerRadius: 40}
+];
 
-  formatMinute = d3.time.format("%M");
+var outerArc = d3.svg.arc()
+    .innerRadius(function(d) { return d.innerRadius})
+    .outerRadius(function(d) { return d.outerRadius})
+    .startAngle(0)
+    .endAngle(function(d) { return (d.value / d.size) * 2 * Math.PI; });
 
-  formatHour = d3.time.format("%H");
+//var svg2 = d3.select("#graph").append("svg:path");
+var path; 
 
-  fields = function() {
-    var d, data, hour, minute, second;
-    d = new Date();
-    second = d.getSeconds();
-    minute = d.getMinutes();
-    hour = d.getHours() + minute / 60;
-    return data = [
-      {
-        "unit": "seconds",
-        "text": formatSecond(d),
-        "numeric": second
-      }, {
-        "unit": "minutes",
-        "text": formatMinute(d),
-        "numeric": minute
-      }, {
-        "unit": "hours",
-        "text": formatHour(d),
-        "numeric": hour
-      }
-    ];
+setInterval(function() {
+  var now = new Date();
+  fields[0].previous = fields[0].value; 
+  fields[0].value = timeTo12Hours(now.getHours());
+  fields[1].previous = fields[1].value; fields[1].value = now.getMinutes();
+  fields[2].previous = fields[2].value; fields[2].value = now.getSeconds();
+  
+  //TODO svg.select("path") also selects the areas, so that you could select the areas!
+  path = svg.selectAll("path")
+    .data(fields.filter(function(d) { return d.value; }), function(d) { return d.name; });  
+
+  path.enter().append("svg:path")
+    .attr("id", "circular-path")
+    .transition()
+      .ease("elastic")
+      .duration(750)
+      .attrTween("d", arcTween);
+
+  path.transition()
+      .ease("elastic")
+      .duration(750)
+      .attrTween("d", arcTween);
+
+  path.exit().transition()
+      .ease("bounce")
+      .duration(750)
+      .attrTween("d", arcTween)
+      .remove();
+    
+  //Something like this: redrawStackedGraph(); 
+}, 1000);
+
+function arcTween(b) {
+  var i = d3.interpolate({value: b.previous}, b);
+  return function(t) {
+    return outerArc(i(t));
   };
+}
 
-  pi = Math.PI;
-
-  scaleSecsMins = d3.scale.linear().domain([0, 59 + 59 / 60]).range([0, 2 * pi]);
-
-  scaleHours = d3.scale.linear().domain([0, 11 + 59 / 60]).range([0, 2 * pi]);
-
-  render = function(data) {
-    var hourArc, minuteArc, secondArc;
-    clockGroup.selectAll(".clockhand").remove();
-    secondArc = d3.svg.arc().innerRadius(0).outerRadius(70).startAngle(function(d) {
-      return scaleSecsMins(d.numeric);
-    }).endAngle(function(d) {
-      return scaleSecsMins(d.numeric);
-    });
-    minuteArc = d3.svg.arc().innerRadius(0).outerRadius(70).startAngle(function(d) {
-      return scaleSecsMins(d.numeric);
-    }).endAngle(function(d) {
-      return scaleSecsMins(d.numeric);
-    });
-    hourArc = d3.svg.arc().innerRadius(0).outerRadius(50).startAngle(function(d) {
-      return scaleHours(d.numeric % 12);
-    }).endAngle(function(d) {
-      return scaleHours(d.numeric % 12);
-    });
-    clockGroup.selectAll(".clockhand").data(data).enter().append("svg:path").attr("d", function(d) {
-      if (d.unit === "seconds") {
-        return secondArc(d);
-      } else if (d.unit === "minutes") {
-        return minuteArc(d);
-      } else if (d.unit === "hours") {
-        return hourArc(d);
-      }
-    }).attr("class", "clockhand").attr("stroke", "black").attr("stroke-width", function(d) {
-      if (d.unit === "seconds") {
-        return 2;
-      } else if (d.unit === "minutes") {
-        return 3;
-      } else if (d.unit === "hours") {
-        return 3;
-      }
-    }).attr("fill", "none");
-  };
-
-  setInterval(function() {
-    var data;
-    data = fields();
-    return render(data);
-  }, 1000);
+function timeTo12Hours(hours) {
+    if (hours > 11) {
+        hours = hours - 12;
+    }
+    return hours;
+}
 
 /* 
     FROM HERE
@@ -97,7 +84,7 @@ var angle = d3.time.scale()
 var radius = d3.scale.linear()
     .range([innerRadius, outerRadius]);
 
-var colors = ["#0099CC", "#B22222" ];
+var colors = ["#0099CC", "#B22222"];
 
 var color = d3.scale.threshold()
       .range(colors);
@@ -127,49 +114,43 @@ var area = d3.svg.area.radial()
 var svg = d3.select("#graph").append("svg")
     .attr("width", width)
     .attr("height", height)
-  .append("g")
+    .append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-d3.csv("data/day-data-afternoon.csv", type, function(error, data) {
-  var layers = stack(nest.entries(data));
-    
-  // Extend the domain slightly to match the range of [0, 2π].
-  angle.domain([0, d3.max(data, function(d) { return d.time + 1; })]);
-  radius.domain([0, d3.max(data, function(d) { return d.y0 + d.y; })]);
+//function redrawStackedGraph() {
+    d3.csv("data/day-data-afternoon.csv", type, function (error, data) {
+      var layers = stack(nest.entries(data));
 
-  svg.selectAll(".layer")
-      .data(layers)
-    .enter().append("path")
-      .attr("class", "layer")
-      .attr("d", function(d) { return area(d.values); })
-      .style("fill", function(d, i) { return color(i); });
-      
+      // Extend the domain slightly to match the range of [0, 2π].
+      angle.domain([0, d3.max(data, function(d) { return d.time + 1; })]);
+      radius.domain([0, d3.max(data, function(d) { return d.y0 + d.y; })]);
 
-  svg.selectAll(".axis")
-      .data(d3.range(angle.domain()[1]))
-    .enter().append("g")
-      .attr("class", "axis")
-      .attr("transform", function(d) { return "rotate(" + angle(d) * 180 / Math.PI + ")"; })
-    .call(d3.svg.axis()
-      .scale(radius.copy().range([-innerRadius, -outerRadius]))
-      .orient("left"))
-    .append("text")
-      .attr("y", -innerRadius + 6)
-      .attr("dy", ".71em")
-      .attr("text-anchor", "middle")
-      .text(function(d) { return formatDay(d + 12); }); // text label on axis
-});
+      svg.selectAll(".layer")
+          .data(layers)
+        .enter().append("path")
+          .attr("class", "layer")
+          .attr("d", function(d) { return area(d.values); })
+          .style("fill", function(d, i) { return color(i); });
 
+      svg.selectAll(".axis")
+          .data(d3.range(angle.domain()[1]))
+        .enter().append("g")
+          .attr("class", "axis")
+          .attr("transform", function(d) { return "rotate(" + angle(d) * 180 / Math.PI + ")"; })
+        .call(d3.svg.axis()
+          .scale(radius.copy().range([-innerRadius, -outerRadius]))
+          .orient("left"))
+        .append("text")
+          .attr("y", -innerRadius + 6)
+          .attr("dy", ".71em")
+          .attr("text-anchor", "middle")
+          .attr("id", "hour-label")
+          .text(function(d) { return formatDay(d + 12); }); // text label on axis
+    });
 
-  clockGroup = svg.append("svg:g").attr("transform", "translate(" + 0 + "," + 0 + ")");
-
-  clockGroup.append("svg:circle").attr("r", 80).attr("fill", "none").attr("class", "clock outercircle").attr("stroke", "black").attr("stroke-width", 2);
-
-  clockGroup.append("svg:circle").attr("r", 4).attr("fill", "black").attr("class", "clock innercircle");
-
-
-function type(d) {
-  d.time = +d.time;
-  d.value = +d.value;
-  return d;
-}
+    function type(d) {
+      d.time = +d.time;
+      d.value = +d.value;
+      return d;
+    }
+//}
