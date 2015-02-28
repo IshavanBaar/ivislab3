@@ -45,3 +45,12 @@ path {
   stroke: #666;
   stroke-width: 1.5px;
 }
+
+/*time button*/
+#time-button {
+  background-color: transparent;
+  width: 77px;
+  top: 233px;
+  left: 442px;
+  position: absolute;
+}
