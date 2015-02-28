@@ -1,11 +1,12 @@
 
 var w = 960,
-    h = 500;
+    h = 500,
+hourScale = 0;
 
 var fields = [
-  {id: 0, name: "hours", value: 0, size: 12, innerRadius: 80, outerRadius: 100},
-  {id: 1, name: "minutes", value: 0, size: 60, innerRadius: 50, outerRadius: 70},
-  {name: "seconds", value: 0, size: 60, innerRadius: 20, outerRadius: 40}
+  {id: 0, name: "hours", value: 0, size: 12, innerRadius: 100, outerRadius: 120},
+  {id: 1, name: "minutes", value: 0, size: 60, innerRadius: 70, outerRadius: 90},
+  {name: "seconds", value: 0, size: 60, innerRadius: 40, outerRadius: 60}
 ];
 
 var outerArc = d3.svg.arc()
@@ -14,7 +15,7 @@ var outerArc = d3.svg.arc()
     .startAngle(0)
     .endAngle(function(d) { return (d.value / d.size) * 2 * Math.PI; });
 
-var svg = d3.select("#graph").append("svg:svg")
+var svg2 = d3.select("#clock").append("svg:svg")
     .attr("width", w)
     .attr("height", h)
   .append("svg:g")
@@ -23,11 +24,11 @@ var svg = d3.select("#graph").append("svg:svg")
 setInterval(function() {
   var now = new Date();
   fields[0].previous = fields[0].value; 
-  fields[0].value = timeTo12Hours(now.getHours());
+  fields[0].value = timeForHours(now.getHours());
   fields[1].previous = fields[1].value; fields[1].value = now.getMinutes();
   fields[2].previous = fields[2].value; fields[2].value = now.getSeconds();
 
-  var path = svg.selectAll("path")
+  var path = svg2.selectAll("path")
       .data(fields.filter(function(d) { return d.value; }), function(d) { return d.name; });
 
   path.enter().append("svg:path")
@@ -57,9 +58,13 @@ function arcTween(b) {
   };
 }
 
-function timeTo12Hours(hours) {
-    if (hours > 11) {
-        hours = hours - 12;
+function timeForHours(hours) {
+    if (hourScale === 0) {  
+        if (hours > 11) {
+            hours = hours - 12;
+        }
+    } else if (hourScale === 2) {
+        //TODO
     }
     return hours;
 }

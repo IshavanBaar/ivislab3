@@ -8,18 +8,42 @@
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
     
-    <title>Your Energy Use</title>
+    <title>Your Energy Costs</title>
+    <link rel="shortcut icon" href="/circle-arrow.ico" type="image/x-icon">
+	<link rel="icon" href="/circle-arrow.ico" type="image/x-icon">
     
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
 	<!-- Custom CSS -->
 	<link rel="stylesheet" href="css/style.css">
+    
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery.js"></script>
+    <!-- Bootstrap JavaScript, needed if you want for instance tabs, models, popovers etc. -->
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     <!-- d3 scripts -->
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 </head>
 
 <body>
-    <div id="graph">
-        <script src="js/StackedRadialArea.js"></script>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8">
+          <h2>Your Energy Costs</h1>
+        </div>
+        <div class="col-md-4">
+            <div id="author">IVIS Lab 3 - <small>by Isha van Baar</small></div>
+        </div>
+      </div>
+      <div class="row">
+        <div id="canvas">
+            <div id="graph">
+                <script src="js/StackedRadialArea.js"></script>
+            </div>
+             <div id="clock">
+                <script src="js/ArcTweenClock.js"></script>
+            </div>
+        </div> 
+      </div>
     </div>
 </body>
