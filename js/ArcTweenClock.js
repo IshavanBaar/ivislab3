@@ -1,7 +1,7 @@
 var w = 960,
     h = 500,
     hourScale = 0, //0 if 12h, 1 if 24h, 2 if 1 week
-    days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    days = ['Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 
 var fields = [
@@ -75,7 +75,7 @@ function timeForHourPath(hours, day) {
     }
     else if (hourScale === 2) {
         fields[0].size = 168;
-        hours = hours + (day-1) * 24;
+        hours = hours + day * 24;
     }
     return hours;
 }
@@ -83,11 +83,11 @@ function timeForHourPath(hours, day) {
 function timeStringForButton(day, hours, minutes) {
     var timeString = '';
     if (hourScale === 0) {  
-        if (hours > 0 && hours < 6) {
+        if (hours >= 0 && hours < 6) {
             timeString = 'Night';
-        } else if (hours > 6 && hours < 12) {
+        } else if (hours >= 6 && hours < 12) {
             timeString = 'Morning';
-        } else if (hours > 12 && hours < 18) {
+        } else if (hours >= 12 && hours < 18) {
             timeString = 'Midday';
         } else {
             timeString = 'Evening';
@@ -95,8 +95,10 @@ function timeStringForButton(day, hours, minutes) {
     } 
     else if (hourScale === 1) {
         var minuteString = minutes + '';
+        var hourString = hours + '';
         if (minutes < 10) { minuteString = '0' + minutes}
-        timeString = hours + ":" + minutes;    
+        if (hours < 10) { hourString = '0' + hours}
+        timeString = hourString + ":" + minuteString;    
     }
     else if (hourScale === 2) {
         timeString = days[day];    
