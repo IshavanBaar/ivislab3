@@ -17,12 +17,7 @@ var angle = d3.time.scale()
 var radius = d3.scale.linear()
     .range([innerRadius, outerRadius]);
 
-var colors = ["#0099CC", "#B22222"];
-
-var color = d3.scale.threshold()
-      .range(colors);
-
-var z = d3.scale.category20c();
+var colors = ["#FFE303", "#0099CC", "#B22222"];
 
 var stack = d3.layout.stack()
     .offset("zero")
@@ -50,40 +45,112 @@ var svg = d3.select("#graph").append("svg")
     .append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-//function redrawStackedGraph() {
-    d3.csv("data/day-data-afternoon.csv", type, function (error, data) {
-      var layers = stack(nest.entries(data));
+// VIC FROM HERE ON
+var allData; 
+var period = 12; 
+var now = new Date();
+var day = now.getDay(); // 1
+var hours = now.getHours(); // 20
+var startOfHalfDay;
+if (hours > 11) {
+    startOfHalfDay = 12;
+} else {
+    startOfHalfDay = 0;
+}
 
-      // Extend the domain slightly to match the range of [0, 2π].
-      angle.domain([0, d3.max(data, function(d) { return d.time + 1; })]);
-      radius.domain([0, d3.max(data, function(d) { return d.y0 + d.y; })]);
+//load the data in an array
+d3.csv("data/all-costs-one-week.csv",type, function(loadedRows) {
+    //allData = loadedRows;
+    
+    // i = startofhalfday on the day of days[day]
+    var i = day * 24 + startOfHalfDay;
+    loadedRows = loadedRows.slice(i-1,i+period-2);
 
-      svg.selectAll(".layer")
-          .data(layers)
-        .enter().append("path")
-          .attr("class", "layer")
-          .attr("d", function(d) { return area(d.values); })
-          .style("fill", function(d, i) { return color(i); });
+    //alert(1);
+    // FROM HERE ON, WHAT WILL I NEED? I ONLY WANT TO SHOW THE CURRENT PERIOD HOURLY,
+    //allDataSliced = loadedRows.slice(period);
+    
+    //currentDay = frameDataHourly(currentDay);
+    //currentDay = frameData(24);
+    //if (hours > 12) { hours = hours - 12};
+    //var data = loadedRows.slice(0, hours+1);
+    
+    var data = loadedRows;
+    //timestamp = new Date(data[0].timestamp).toDateString();
+    //$("#message").html(timestamp);
+    
+    var tmp = convertData(data);
+    
+    loadData(tmp);
+    
+    //timer = setInterval(function () {tickLoad()}, 2000);
+    //allData = convertData(loadedRows);
+    //loadData(allData);
+});
 
-      svg.selectAll(".axis")
-          .data(d3.range(angle.domain()[1]))
-        .enter().append("g")
-          .attr("class", "axis")
-          .attr("transform", function(d) { return "rotate(" + angle(d) * 180 / Math.PI + ")"; })
-        .call(d3.svg.axis()
-          .scale(radius.copy().range([-innerRadius, -outerRadius]))
-          .orient("left"))
-        .append("text")
-          .attr("y", -innerRadius + 9)
-          .attr("dy", ".71em")
-          .attr("text-anchor", "middle")
-          .attr("id", "hour-label")
-          .text(function(d) { return formatDay(d + 12); }); // text label on axis
-    });
+function loadData(data) {
+  var layers = stack(nest.entries(data));
 
-    function type(d) {
-      d.time = +d.time;
-      d.value = +d.value;
-      return d;
+     // Extend the domain slightly to match the range of [0, 2π].
+    //  angle.domain([0, d3.max(data, function(d) { return d.time + 1; })]);
+  angle.domain([0, 12]);
+  radius.domain([0, d3.max(data, function(d) { return d.y0 + d.y; })]);
+
+  svg.selectAll(".layer")
+      .data(layers)
+    .enter().append("path")
+      .attr("class", "layer")
+      .attr("d", function(d) { return area(d.values); })
+      .style("fill", function(d, i) { return colors[i]; }); 
+
+  svg.selectAll(".axis")
+      .data(d3.range(angle.domain()[1]))
+    .enter().append("g")
+      .attr("class", "axis")
+      .attr("transform", function(d) { return "rotate(" + angle(d) * 180 / Math.PI + ")"; })
+    .call(d3.svg.axis()
+      .scale(radius.copy().range([-innerRadius, -outerRadius]))
+      .orient("left"))
+    .append("text")
+      .attr("y", -innerRadius + 9)
+      .attr("dy", ".71em")
+      .attr("text-anchor", "middle")
+      .attr("id", "hour-label")
+      .text(function(d) { return formatDay(d); }); // text label on axis
+}
+
+function convertData(rows)
+    {
+        var temp = [];
+
+        for (var i = 0; i < rows.length; i++) {
+
+          var row = rows[i];
+          electricityVal = row.electricity;
+          coldwaterVal = row.coldwater;
+          hotwaterVal = row.hotwater;
+
+          var obj = {};
+
+          obj = {key : "electricity", time: row.time, value: electricityVal, timestamp: row.timestamp};
+          temp.push(obj);
+
+          obj = {key : "coldwater", time: row.time, value: coldwaterVal, timestamp: row.timestamp};
+          temp.push(obj);
+
+          obj = {key : "hotwater", time: row.time, value: hotwaterVal, timestamp: row.timestamp};
+          temp.push(obj);
+        };
+
+        return temp;
     }
-//}
+
+function type(d) {
+  d.timestamp = d.time;
+  d.day = new Date(d.time).getDay(); 
+  d.time = new Date(d.time).getHours();
+  d.electricity = +d.electricity;
+  d.coldwater = +d.coldwater;
+  d.hotwater = +d.hotwater;
+  return d;
+}
