@@ -54,6 +54,8 @@ setInterval(function(d) {
       .remove();
   
   $("#time-button").text(timeStringForButton(now.getUTCDay(), now.getHours(), now.getMinutes()));
+    
+  updateCurrentTime(now);
 }, 1000);
 
 function arcTween(b) {

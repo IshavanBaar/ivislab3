@@ -29,12 +29,12 @@ var nest = d3.nest()
     .key(function(d) { return d.key; });
 
 var line = d3.svg.line.radial()
-    .interpolate("basis-open")
+    .interpolate("basis")
     .angle(function(d) { return angle(d.time); })
     .radius(function(d) { return radius(d.y0 + d.y); });
 
 var area = d3.svg.area.radial()
-    .interpolate("basis-open")
+    .interpolate("basis")
     .angle(function(d) { return angle(d.time); })
     .innerRadius(function(d) { return radius(d.y0); })
     .outerRadius(function(d) { return radius(d.y0 + d.y); });
@@ -45,54 +45,83 @@ var svg = d3.select("#graph").append("svg")
     .append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-// VIC FROM HERE ON
-var allData; 
 var period = 12; 
 var now = new Date();
-var day = now.getDay(); // 1
-var hours = now.getHours(); // 20
-var startOfHalfDay;
+var day = now.getDay();
+var hours = now.getHours(); 
+var startOfHalfDay = 0;
 if (hours > 11) {
     startOfHalfDay = 12;
 } else {
     startOfHalfDay = 0;
 }
 
-//load the data in an array
-d3.csv("data/all-costs-one-week.csv",type, function(loadedRows) {
-    //allData = loadedRows;
-    
-    // i = startofhalfday on the day of days[day]
-    var i = day * 24 + startOfHalfDay;
-    loadedRows = loadedRows.slice(i-1,i+period-2);
+function updateCurrentTime(nowObject) {
+    now = nowObject;
 
+    
+    var newHours = now.getHours(); 
+    if (newHours - hours === 1) {
+        day = now.getDay(); 
+        
+        var startOfHalfDay;
+        if (hours > 11) {
+            startOfHalfDay = 12;
+        } else {
+            startOfHalfDay = 0;
+        }
+        plotData();    
+    } 
+    hours = newHours;
+}
+
+var startingData;
+//load the data in an array
+d3.csv("data/all-costs-one-week.csv",type, function (loadedRows) {
+    
+    startingData = loadedRows;
+    plotData();
+    // i = startofhalfday on the day of days[day]
+    
     //alert(1);
-    // FROM HERE ON, WHAT WILL I NEED? I ONLY WANT TO SHOW THE CURRENT PERIOD HOURLY,
-    //allDataSliced = loadedRows.slice(period);
     
     //currentDay = frameDataHourly(currentDay);
     //currentDay = frameData(24);
     //if (hours > 12) { hours = hours - 12};
     //var data = loadedRows.slice(0, hours+1);
     
-    var data = loadedRows;
+    // var data = loadedRows;
     //timestamp = new Date(data[0].timestamp).toDateString();
     //$("#message").html(timestamp);
     
-    var tmp = convertData(data);
+    // var tmp = convertData(data);
     
-    loadData(tmp);
+    // loadData(tmp);
     
     //timer = setInterval(function () {tickLoad()}, 2000);
     //allData = convertData(loadedRows);
     //loadData(allData);
 });
 
+function plotData() {
+    
+    loadedRows = startingData.clone();
+    
+    var i = day * 24 + startOfHalfDay;
+    loadedRows = loadedRows.slice(i,i+hours-12+1);
+    var data = loadedRows;
+        
+    var tmp = convertData(data);
+    loadData(tmp);
+    
+}
+    
+    
 function loadData(data) {
   var layers = stack(nest.entries(data));
 
-     // Extend the domain slightly to match the range of [0, 2π].
-    //  angle.domain([0, d3.max(data, function(d) { return d.time + 1; })]);
+  // Extend the domain slightly to match the range of [0, 2π].
+  //  angle.domain([0, d3.max(data, function(d) { return d.time + 1; })]);
   angle.domain([0, 12]);
   radius.domain([0, d3.max(data, function(d) { return d.y0 + d.y; })]);
 
@@ -119,31 +148,41 @@ function loadData(data) {
       .text(function(d) { return formatDay(d); }); // text label on axis
 }
 
-function convertData(rows)
-    {
-        var temp = [];
+function convertData(rows) {
+    var temp = [];
 
-        for (var i = 0; i < rows.length; i++) {
+    for (var i = 0; i < rows.length; i++) {
 
-          var row = rows[i];
-          electricityVal = row.electricity;
-          coldwaterVal = row.coldwater;
-          hotwaterVal = row.hotwater;
+      var row = rows[i];
+      electricityVal = row.electricity;
+      coldwaterVal = row.coldwater;
+      hotwaterVal = row.hotwater;
 
-          var obj = {};
+      var obj = {};
 
-          obj = {key : "electricity", time: row.time, value: electricityVal, timestamp: row.timestamp};
-          temp.push(obj);
+      obj = {key : "electricity", time: row.time, value: electricityVal, timestamp: row.timestamp};
+      temp.push(obj);
 
-          obj = {key : "coldwater", time: row.time, value: coldwaterVal, timestamp: row.timestamp};
-          temp.push(obj);
+      obj = {key : "coldwater", time: row.time, value: coldwaterVal, timestamp: row.timestamp};
+      temp.push(obj);
 
-          obj = {key : "hotwater", time: row.time, value: hotwaterVal, timestamp: row.timestamp};
-          temp.push(obj);
-        };
+      obj = {key : "hotwater", time: row.time, value: hotwaterVal, timestamp: row.timestamp};
+      temp.push(obj);
+    };
 
-        return temp;
-    }
+    return temp;
+}
+
+
+Object.prototype.clone = function() {
+      var newObj = (this instanceof Array) ? [] : {};
+      for (i in this) {
+        if (i == 'clone') continue;
+        if (this[i] && typeof this[i] == "object") {
+          newObj[i] = this[i].clone();
+        } else newObj[i] = this[i]
+      } return newObj;
+    };
 
 function type(d) {
   d.timestamp = d.time;
