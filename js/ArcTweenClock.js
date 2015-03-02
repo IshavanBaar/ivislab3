@@ -114,4 +114,5 @@ function switchTime() {
     } else {
         hourScale++;
     }
+    switchPeriod(hourScale);
 }

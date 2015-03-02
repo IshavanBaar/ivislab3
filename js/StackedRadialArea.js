@@ -45,12 +45,15 @@ var svg = d3.select("#graph").append("svg")
     .append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-var period = 12; 
+var startingData;
+
+var period = 12; //here
 var now = new Date();
 var day = now.getDay();
 var hours = now.getHours(); 
+
 var startOfHalfDay = 0;
-if (hours > 11) {
+if (hours > 11 && period === 12) {
     startOfHalfDay = 12;
 } else {
     startOfHalfDay = 0;
@@ -59,13 +62,12 @@ if (hours > 11) {
 function updateCurrentTime(nowObject) {
     now = nowObject;
 
-    
     var newHours = now.getHours(); 
     if (newHours - hours === 1) {
         day = now.getDay(); 
         
         var startOfHalfDay;
-        if (hours > 11) {
+        if (hours > 11 && period === 12) {
             startOfHalfDay = 12;
         } else {
             startOfHalfDay = 0;
@@ -75,54 +77,63 @@ function updateCurrentTime(nowObject) {
     hours = newHours;
 }
 
-var startingData;
 //load the data in an array
-d3.csv("data/all-costs-one-week.csv",type, function (loadedRows) {
-    
+d3.csv("data/all-costs-one-week.csv",type, function (loadedRows) {  
     startingData = loadedRows;
     plotData();
-    // i = startofhalfday on the day of days[day]
-    
-    //alert(1);
-    
-    //currentDay = frameDataHourly(currentDay);
-    //currentDay = frameData(24);
-    //if (hours > 12) { hours = hours - 12};
-    //var data = loadedRows.slice(0, hours+1);
-    
-    // var data = loadedRows;
-    //timestamp = new Date(data[0].timestamp).toDateString();
-    //$("#message").html(timestamp);
-    
-    // var tmp = convertData(data);
-    
-    // loadData(tmp);
-    
-    //timer = setInterval(function () {tickLoad()}, 2000);
-    //allData = convertData(loadedRows);
-    //loadData(allData);
 });
 
 function plotData() {
-    
     loadedRows = startingData.clone();
     
-    var i = day * 24 + startOfHalfDay;
-    loadedRows = loadedRows.slice(i,i+hours-12+1);
-    var data = loadedRows;
-        
+    var correction = 0;
+    if (period === 12) {
+        correction = 12;
+    }
+    
+    var startSlice;
+    if (period === 168) {
+        startSlice = 0;
+        alert(day * 24 + startOfHalfDay + hours - correction + 1);
+    } else {
+        startSlice = day * 24 + startOfHalfDay;
+    }
+
+    loadedRows = loadedRows.slice(startSlice,day * 24 + startOfHalfDay + hours - correction + 1);
+    
+    var data = loadedRows;    
     var tmp = convertData(data);
     loadData(tmp);
-    
 }
-    
+  
+function switchPeriod(hourScale) {
+    if(hourScale === 0) {
+        period = 12;
+        if (hours > 11) {
+            startOfHalfDay = 12;
+        } else {
+            startOfHalfDay = 0;
+        }
+    } 
+    else if (hourScale == 1) {
+        period = 24;
+        startOfHalfDay = 0;
+    }
+    else if (hourScale == 2) {
+        period = 168;
+        startOfHalfDay = 0;
+    }
+    d3.selectAll(".layer").remove();
+    d3.selectAll(".axis").remove();
+    plotData();
+}
     
 function loadData(data) {
   var layers = stack(nest.entries(data));
 
   // Extend the domain slightly to match the range of [0, 2π].
   //  angle.domain([0, d3.max(data, function(d) { return d.time + 1; })]);
-  angle.domain([0, 12]);
+  angle.domain([0, period]);
   radius.domain([0, d3.max(data, function(d) { return d.y0 + d.y; })]);
 
   svg.selectAll(".layer")
@@ -175,14 +186,14 @@ function convertData(rows) {
 
 
 Object.prototype.clone = function() {
-      var newObj = (this instanceof Array) ? [] : {};
-      for (i in this) {
-        if (i == 'clone') continue;
-        if (this[i] && typeof this[i] == "object") {
-          newObj[i] = this[i].clone();
-        } else newObj[i] = this[i]
-      } return newObj;
-    };
+  var newObj = (this instanceof Array) ? [] : {};
+  for (i in this) {
+    if (i == 'clone') continue;
+    if (this[i] && typeof this[i] == "object") {
+      newObj[i] = this[i].clone();
+    } else newObj[i] = this[i]
+  } return newObj;
+};
 
 function type(d) {
   d.timestamp = d.time;
