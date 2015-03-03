@@ -1,9 +1,25 @@
-/*Header*/
+/*Header, Footer, Subtitle*/
+.black-header {
+	color: #000000; 
+}
+
 #author {
     float: right;
     font-size: 16px;
     color: #808080;
     margin-top: 20px;
+}
+
+footer {
+	float: right;
+    font-size: 10px;
+    color: #aea0a0;
+    margin-top: 20px;
+}
+
+#subtitle {
+	font-style: italic;
+    color: #808080;
 }
 
 /*Parts of the screen*/

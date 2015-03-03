@@ -1,8 +1,8 @@
 var w = 960,
     h = 500,
     hourScale = 0, //0 if 12h, 1 if 24h, 2 if 1 week
-    days = ['Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
+    days = ['Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    now = new Date();
 
 var fields = [
   {name: "hours", value: 0, size: 12, innerRadius: 100, outerRadius: 120},
@@ -23,7 +23,7 @@ var svg2 = d3.select("#clock").append("svg:svg")
     .attr("transform", "translate(0," + (h / 2) + ")");
 
 setInterval(function(d) {
-  var now = new Date();
+  now = new Date();
   fields[0].previous = fields[0].value; 
 
   fields[0].value = timeForHourPath(now.getHours(), now.getDay());
@@ -52,8 +52,6 @@ setInterval(function(d) {
       .duration(750)
       .attrTween("d", arcTween)
       .remove();
-  
-  $("#time-button").text(timeStringForButton(now.getUTCDay(), now.getHours(), now.getMinutes()));
     
   updateCurrentTime(now);
 }, 1000);
@@ -76,36 +74,34 @@ function timeForHourPath(hours, day) {
         fields[0].size = 24;
     }
     else if (hourScale === 2) {
-        fields[0].size = 168;
-        hours = hours + day * 24;
+        fields[0].size = 48;
+        if (day > 0) {hours = hours + (day-1) * 24;}
+        else {hours = hours + day * 24;}
     }
     return hours;
 }
 
-function timeStringForButton(day, hours, minutes) {
+function timeStringForButton() {
     var timeString = '';
     if (hourScale === 0) {  
-        if (hours >= 0 && hours < 6) {
-            timeString = 'Night';
-        } else if (hours >= 6 && hours < 12) {
-            timeString = 'Morning';
-        } else if (hours >= 12 && hours < 18) {
-            timeString = 'Midday';
+        if (hours >= 0 && hours < 12) {
+            timeString = 'A.M.';
         } else {
-            timeString = 'Evening';
-        }
+            timeString = 'P.M.';
+        } 
     } 
     else if (hourScale === 1) {
-        var minuteString = minutes + '';
-        var hourString = hours + '';
-        if (minutes < 10) { minuteString = '0' + minutes}
-        if (hours < 10) { hourString = '0' + hours}
+        var minuteString = now.getMinutes() + '';
+        var hourString = now.getHours() + '';
+        if (now.getMinutes() < 10) { minuteString = '0' + now.getMinutes()}
+        if (hours < 10) { hourString = '0' + now.getHours()}
         timeString = hourString + ":" + minuteString;    
     }
     else if (hourScale === 2) {
-        timeString = days[day];    
+        if(day > 0) {timeString = days[day-1] + '&' + days[now.getDay()];}
+        else {timeString = days[6] + '&' + days[now.getDay()];}
     }
-    return timeString;
+    $("#time-button").text(timeString);
 }
 
 function switchTime() {
@@ -114,5 +110,6 @@ function switchTime() {
     } else {
         hourScale++;
     }
+    timeStringForButton();
     switchPeriod(hourScale);
 }

@@ -46,6 +46,7 @@ var svg = d3.select("#graph").append("svg")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
 var startingData;
+var browser = get_browser_info();
 
 var period = 12; //here
 var now = new Date();
@@ -79,6 +80,8 @@ function updateCurrentTime(nowObject) {
 
 //load the data in an array
 d3.csv("data/all-costs-one-week.csv",type, function (loadedRows) {  
+    timeStringForButton();
+    
     startingData = loadedRows;
     plotData();
 });
@@ -87,25 +90,32 @@ function plotData() {
     loadedRows = startingData.clone();
     
     var correction = 0;
-    if (period === 12) {
+    if (hours > 11 && period === 12) {
         correction = 12;
+    } else if (hours >= 0 && day === now.getDay() && period === 48) {
+        hours = hours + 24;
     }
     
     var startSlice;
-    if (period === 168) {
-        startSlice = 0;
-    } else {
+    if (period === 48 && day > 0) { startSlice = (day-1) * 24 + startOfHalfDay}
+    else {
         startSlice = day * 24 + startOfHalfDay;
     }
     
-    var browser=get_browser_info();
     if (browser.name === 'Chrome') { 
         loadedRows = loadedRows.slice(startSlice - 1,day * 24 + startOfHalfDay + hours - correction);
     }
     else {
-        loadedRows = loadedRows.slice(startSlice,day * 24 + startOfHalfDay + hours - correction + 1);
+        if (period === 48 && day === 0) {
+            var lastDay = loadedRows.slice(loadedRows[loadedRows.length-24],loadedRows[loadedRows.length]);
+            loadedRows = loadedRows.slice(startSlice,day * 24 + startOfHalfDay + hours - correction + 1);   
+            loadedRows = lastDay.concat(loadedRows);
+        } else {
+            loadedRows = loadedRows.slice(startSlice,day * 24 + startOfHalfDay + hours - correction + 1); 
+            
+            for(var i = 0; i < loadedRows.length; i++) { if (i > 23) {loadedRows[i].time += 24;}}  
+        }
     }
-    
     
     var data = loadedRows;    
     var tmp = convertData(data);
@@ -126,14 +136,15 @@ function switchPeriod(hourScale) {
         startOfHalfDay = 0;
     }
     else if (hourScale == 2) {
-        period = 168;
-        startOfHalfDay = 0;
+        period = 48;
+        startOfHalfDay = 0;  
     }
     d3.selectAll(".layer").remove();
     d3.selectAll(".axis").remove();
     plotData();
 }
     
+var previousTime = 0; 
 function loadData(data) {
   var layers = stack(nest.entries(data));
 
@@ -148,7 +159,7 @@ function loadData(data) {
       .attr("class", "layer")
       .attr("d", function(d) { return area(d.values); })
       .style("fill", function(d, i) { return colors[i]; }); 
-
+    
   svg.selectAll(".axis")
       .data(d3.range(angle.domain()[1]))
     .enter().append("g")
@@ -162,14 +173,24 @@ function loadData(data) {
       .attr("dy", ".71em")
       .attr("text-anchor", "middle")
       .attr("id", "hour-label")
-      .text(function(d) { return formatDay(d); }); // text label on axis
+      .text(function(d) { 
+        //if (period !== 48) {
+            return formatDay(d); 
+        /*} else {
+            var hourOnScale = formatDay(d);
+            if (previousTime > hourOnScale) {
+                previousTime = parseInt(hourOnScale) + 24;  
+                return parseInt(hourOnScale) + 24;
+            } 
+            else {previousTime = hourOnScale; return formatDay(d); }
+        }*/
+      }); // text label on axis
 }
 
 function convertData(rows) {
     var temp = [];
 
     for (var i = 0; i < rows.length; i++) {
-
       var row = rows[i];
       electricityVal = row.electricity;
       coldwaterVal = row.coldwater;
@@ -190,17 +211,6 @@ function convertData(rows) {
     return temp;
 }
 
-
-Object.prototype.clone = function() {
-  var newObj = (this instanceof Array) ? [] : {};
-  for (i in this) {
-    if (i == 'clone') continue;
-    if (this[i] && typeof this[i] == "object") {
-      newObj[i] = this[i].clone();
-    } else newObj[i] = this[i]
-  } return newObj;
-};
-
 function type(d) {
   d.timestamp = d.time;
   d.day = new Date(d.time).getDay(); 
@@ -210,6 +220,19 @@ function type(d) {
   d.hotwater = +d.hotwater;
   return d;
 }
+
+/*
+    FROM THE INTERNET 
+*/
+Object.prototype.clone = function() {
+  var newObj = (this instanceof Array) ? [] : {};
+  for (i in this) {
+    if (i == 'clone') continue;
+    if (this[i] && typeof this[i] == "object") {
+      newObj[i] = this[i].clone();
+    } else newObj[i] = this[i]
+  } return newObj;
+};
 
 function get_browser_info(){
     var ua=navigator.userAgent,tem,M=ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || []; 
