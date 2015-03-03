@@ -11,7 +11,7 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
     <!-- Custom CSS -->
-	<link rel="stylesheet" href="css/general-style.css">
+	<link rel="stylesheet" href="css/style.css">
   </head>
   <body>
 	<div class="container">
@@ -26,10 +26,17 @@
 		<div class="row">
 			<div>
 				<h3>Analytical Trail</h3>
-				<p>
-				TODO here comes some text
+				<p>From the beginning I had the idea to make this visualization dynamic by updating the values each hour, as if they had just been  received. The use of a clock could greatly help with making the idea of live updates clear. Moreover, as said in Reading 5 a clock is recognizable, ambient, and easily readable.
+<br></br>
+Thus, after some exploration I decided to use the so called Arc Tween Clock in the middle of the circle of the Stacked Radial Graph that would be built. The Arc Tween Clock not only looks aesthetically pleasant and alive but it also could be easily changed for different clocks. I wanted the user to be able to change between a normal 12 hour clock, a 24 hour clock and the past week by simply pressing the middle text of the circle.
+<br </br>
+Another important decision was to use the costs of the data. I found some sources (see footer) to estimate the costs in kronor for electricity and cold/hot water (presuming they have different pipeline systems). This way I could scale easily and use all measured variables.
+<br></br>
+In the visual structure I had big difficulties to map the values to the right hours. I had to tweak the select row formula a lot and the period of the circle as well. Also in some browsers the values seem to be mapped one step further than they should be, so I strongly advise to view in Firefox.
+<br></br>
+I did not manage to map the values for the entire week until the current day. The 168 hours involved could not be mapped easily to the circle. This is why I chose to show the last 48 hours instead after the second button press. Unfortunately also in this result there are some bugs left.
 				</p>
-				<a class="btn" href= "https://www.dropbox.com/sh/b9dvyciznn2kpf9/AABDzsvKbiAoNc1gXYTtD0c3a?dl=0">TODO here the table files!</a>
+				<a class="btn" href= "https://www.dropbox.com/s/upd5guh5tsledma/all-costs-one-week.csv?dl=0">Check the data table!</a>
 				<a class="btn" href="index.html">Back to the view!</a>
 			</div>
 		</div>
