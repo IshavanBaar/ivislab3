@@ -102,7 +102,7 @@ function plotData() {
         startSlice = day * 24 + startOfHalfDay;
     }
     
-    if (browser.name === 'Chrome') { 
+    if (browser.name === 'Chrome' || browser.name === 'safari') { 
         loadedRows = loadedRows.slice(startSlice - 1,day * 24 + startOfHalfDay + hours - correction);
     }
     else {
